@@ -70,7 +70,8 @@ def main():
 			cv2.imshow('mask', mask)
 
 		offset = (x+w/2)-(width/2)
-		print(offset)
+		
+		sd.putNumber("offset", offset)  # Push data to table
 
 		fps.update()  # Update FPS
 
