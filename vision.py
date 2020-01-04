@@ -1,9 +1,10 @@
+import cv2, pickle, argparse
 from imutils.video import WebcamVideoStream, FPS
-import cv2
-import pickle
+from networktables import NetworkTables
 
-vs = WebcamVideoStream(src=0).start()
-fps = FPS().start()
+# Variable constants
+ROBORIO_IP = "10.6.12.2"
+
 
 def load_threshold(PICKLE_PATH):  
 	'''
@@ -18,32 +19,72 @@ def load_threshold(PICKLE_PATH):
 	return HSV_LOW, HSV_HIGH
 
 
-while True:
-	frame = vs.read()  # Fetch the frame from the camera
-	display = frame.copy()
+def create_arguments():
+	'''
+	Create argpars structure for passing arguments through command line
+	'''
+	ap = argparse.ArgumentParser()
+	ap.add_argument("-d", "--display", type=int, default=-1, help="Whether or not frames should be displayed")
+	ap.add_argument("-t", "--table", type=str, required=True, help="Determine the name of the NetworkTable to push to")
+	args = vars(ap.parse_args())
+	return args
 
-	hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)  # Convert into HSV readable
 
-	hsv_low, hsv_high = load_threshold("pickles/")  # Load the pickle files and parse it
-	mask = cv2.inRange(hsv, hsv_low, hsv_high)  # Filter HSV range
+def main():
+	'''
+	Main loop for vision capturing
+	'''
+	vs = WebcamVideoStream(src=0).start()
+	fps = FPS().start()
 
-	cnts,_ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)  # Find the contours
-	cnt = max(cnts, key = cv2.contourArea)  # Find the biggest contour
-	x,y,w,h = cv2.boundingRect(cnt)  # Get the bounding box of the biggest contour
+	args = create_arguments()
 
-	# Display the box and the top bisecting point of the box
-	cv2.rectangle(display,(x,y),(x+w,y+h),(0,255,0),2)
-	cv2.circle(display, (int(x+w/2), y), 5, (255,0,0), thickness=1)
+	NetworkTables.initialize(server=ROBORIO_IP)  # Initialize NetworkTable server
+	sd = NetworkTables.getTable(args["table"])  # Fetch the NetworkTable table
 
-	# Show the frame and the mask
-	cv2.imshow('Frame', display)
-	cv2.imshow('mask', mask)
-	fps.update()  # Update FPS
+	while True:
+		frame = vs.read()  # Fetch the frame from the camera
+		display = frame.copy()
 
-	k = cv2.waitKey(5) & 0xFF
-	if k == 27:  # If ESC is clicked, end the loop 
-		break
+		height, width = frame.shape[:2]
 
-fps.stop()
-print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
-print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
+		hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)  # Convert into HSV readable
+
+		hsv_low, hsv_high = load_threshold("pickles/")  # Load the pickle files and parse it
+		mask = cv2.inRange(hsv, hsv_low, hsv_high)  # Filter HSV range
+
+		cnts,_ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)  # Find the contours
+		cnt = max(cnts, key = cv2.contourArea)  # Find the biggest contour
+		x,y,w,h = cv2.boundingRect(cnt)  # Get the bounding box of the biggest contour
+
+
+		if args['display'] > 0:  # Only display frames if true
+
+			# Display drawings on frame
+			cv2.rectangle(display,(x,y),(x+w,y+h),(0,255,0),2)
+			cv2.circle(display, (int(x+w/2), y), 5, (255,0,0), thickness=1)
+			cv2.line(display, (int(width/2), 0), (int(width/2), height), (0,0,255), 4)
+			
+			# Show the frame and the mask
+			cv2.imshow('Frame', display)
+			cv2.imshow('mask', mask)
+
+		offset = (x+w/2)-(width/2)
+		print(offset)
+
+		fps.update()  # Update FPS
+
+		k = cv2.waitKey(5) & 0xFF
+		if k == 27:  # If ESC is clicked, end the loop 
+			break
+
+	fps.stop()
+	print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
+	print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
+
+	cv2.destroyAllWindows()
+	vs.stop()
+
+
+if __name__ == "__main__":
+	main()

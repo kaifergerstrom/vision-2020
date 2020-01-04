@@ -2,7 +2,7 @@ from imutils.video import WebcamVideoStream, FPS
 import cv2
 import pickle
 
-
+# Variable constants
 PICKLE_PATH = "pickles/"  # Path of folders with pickles
 
 
@@ -56,47 +56,55 @@ def create_hsv_slider():  # Create sliders for HSV values
 	cv2.setTrackbarPos("V2", "slider", hsv_high[2])
 
 
-# Start the webcam feed, and start FPS counter
-vs = WebcamVideoStream(src=0).start()
-fps = FPS().start()
+def main():
+	'''
+	Main loop for vision tuning
+	'''
+	# Start the webcam feed, and start FPS counter
+	vs = WebcamVideoStream(src=0).start()
+	fps = FPS().start()
 
-create_hsv_slider()
+	create_hsv_slider()
 
-while True:
-	
-	frame = vs.read()  # Fetch the frame from the camera
-	display = frame.copy() # Create a copy of frame for clear display and drawing
+	while True:
+		
+		frame = vs.read()  # Fetch the frame from the camera
+		display = frame.copy() # Create a copy of frame for clear display and drawing
 
-	# Fetch values from sliders
-	h1 = cv2.getTrackbarPos('H', 'slider')
-	s1 = cv2.getTrackbarPos('S', 'slider')
-	v1 = cv2.getTrackbarPos('V', 'slider')
+		# Fetch values from sliders
+		h1 = cv2.getTrackbarPos('H', 'slider')
+		s1 = cv2.getTrackbarPos('S', 'slider')
+		v1 = cv2.getTrackbarPos('V', 'slider')
 
-	h2 = cv2.getTrackbarPos('H2', 'slider')
-	s2 = cv2.getTrackbarPos('S2', 'slider')
-	v2 = cv2.getTrackbarPos('V2', 'slider')
+		h2 = cv2.getTrackbarPos('H2', 'slider')
+		s2 = cv2.getTrackbarPos('S2', 'slider')
+		v2 = cv2.getTrackbarPos('V2', 'slider')
 
-	hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)  # Convert into HSV readable
-	mask = cv2.inRange(hsv, (h1,s1,v1), (h2,s2,v2))  # Filter HSV range
+		hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)  # Convert into HSV readable
+		mask = cv2.inRange(hsv, (h1,s1,v1), (h2,s2,v2))  # Filter HSV range
 
-	# Display the frames
-	cv2.imshow('Mask', mask)
-	cv2.imshow('Frame', display)
+		# Display the frames
+		cv2.imshow('Mask', mask)
+		cv2.imshow('Frame', display)
 
-	k = cv2.waitKey(5) & 0xFF
+		k = cv2.waitKey(5) & 0xFF
 
-	if k == 27:  # If ESC is clicked, end the loop 
-		break
+		if k == 27:  # If ESC is clicked, end the loop 
+			break
 
-	if k == ord('s'):  # If S is clicked, save the hsv values
-		save_threshold_values((h1,s1,v1),(h2,s2,v2))  # Save the values
-		print("Saved current HSV config: low: ({},{},{}), high: ({},{},{})".format(h1, s1, v1, h2, s2, v2))
+		if k == ord('s'):  # If S is clicked, save the hsv values
+			save_threshold_values((h1,s1,v1),(h2,s2,v2))  # Save the values
+			print("Saved current HSV config: low: ({},{},{}), high: ({},{},{})".format(h1, s1, v1, h2, s2, v2))
 
-	fps.update()  # Update FPS
+		fps.update()  # Update FPS
 
-fps.stop()
-print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
-print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
+	fps.stop()
+	print("[INFO] elasped time: {:.2f}".format(fps.elapsed()))
+	print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
 
-cv2.destroyAllWindows()
-vs.stop()
+	cv2.destroyAllWindows()
+	vs.stop()
+
+
+if __name__ == "__main__":
+	main()
