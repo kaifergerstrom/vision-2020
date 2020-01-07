@@ -4,6 +4,7 @@ from networktables import NetworkTables
 
 # Variable constants
 ROBORIO_IP = "10.6.12.2"
+OUTLIER = -99999
 
 def load_threshold(PICKLE_PATH):  
 	'''
@@ -71,9 +72,9 @@ def main():
 					cv2.line(display, (int(width/2), 0), (int(width/2), height), (0,0,255), 4)
 
 			else:
-				sd.putNumber("tx", -99999)  # Push outlier value to table (not found)
+				sd.putNumber("tx", OUTLIER)  # Push outlier value to table (not found)
 		else:
-				sd.putNumber("tx", -99999)  # Push outlier value to table (not found)
+				sd.putNumber("tx", OUTLIER)  # Push outlier value to table (not found)
 
 		if args['display'] > 0:  # Only display frames if true	
 			# Show the frame and the mask
