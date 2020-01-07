@@ -5,7 +5,6 @@ from networktables import NetworkTables
 # Variable constants
 ROBORIO_IP = "10.6.12.2"
 
-
 def load_threshold(PICKLE_PATH):  
 	'''
 	Load pickle files for contour data, access and load each pickle file for the low/high range
@@ -26,6 +25,7 @@ def create_arguments():
 	ap = argparse.ArgumentParser()
 	ap.add_argument("-d", "--display", type=int, default=-1, help="Whether or not frames should be displayed")
 	ap.add_argument("-t", "--table", type=str, required=True, help="Determine the name of the NetworkTable to push to")
+	ap.add_argument("-a", "--area", type=int, default=0, help="Area limit for contour detection")
 	args = vars(ap.parse_args())
 	return args
 
@@ -54,25 +54,32 @@ def main():
 		mask = cv2.inRange(hsv, hsv_low, hsv_high)  # Filter HSV range
 
 		cnts,_ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)  # Find the contours
-		cnt = max(cnts, key = cv2.contourArea)  # Find the biggest contour
-		x,y,w,h = cv2.boundingRect(cnt)  # Get the bounding box of the biggest contour
 
+		if cnts:  # Prevent error if no contours found
 
-		if args['display'] > 0:  # Only display frames if true
+			cnt = max(cnts, key = cv2.contourArea)  # Find the biggest contour
 
-			# Display drawings on frame
-			cv2.rectangle(display,(x,y),(x+w,y+h),(0,255,0),2)
-			cv2.circle(display, (int(x+w/2), y), 5, (255,0,0), thickness=1)
-			cv2.line(display, (int(width/2), 0), (int(width/2), height), (0,0,255), 4)
-			
+			if cv2.contourArea(cnt) > args['area']:  # Only pass contour if greater than the area limit
+				x,y,w,h = cv2.boundingRect(cnt)  # Get the bounding box of the biggest contour
+				tx = (x+w/2)-(width/2)  # tx is horizontal offset
+				sd.putNumber("tx", tx)  # Push data to table
+
+				if args['display'] > 0:  # Only display frames if true
+					# Display drawings on frame
+					cv2.rectangle(display,(x,y),(x+w,y+h),(0,255,0),2)
+					cv2.circle(display, (int(x+w/2), y), 5, (255,0,0), thickness=1)
+					cv2.line(display, (int(width/2), 0), (int(width/2), height), (0,0,255), 4)
+
+			else:
+				sd.putNumber("tx", -99999)  # Push outlier value to table (not found)
+		else:
+				sd.putNumber("tx", -99999)  # Push outlier value to table (not found)
+
+		if args['display'] > 0:  # Only display frames if true	
 			# Show the frame and the mask
 			cv2.imshow('Frame', display)
 			cv2.imshow('mask', mask)
-
-		tx = (x+w/2)-(width/2)  # tx is horizontal offset
 		
-		sd.putNumber("tx", tx)  # Push data to table
-
 		fps.update()  # Update FPS
 
 		k = cv2.waitKey(5) & 0xFF
