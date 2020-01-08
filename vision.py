@@ -62,7 +62,7 @@ def main():
 				x,y,w,h = cv2.boundingRect(cnt)  # Get the bounding box of the biggest contour
 				tx = (x+w/2)-(width/2)  # tx is horizontal offset
 				sd.putNumber("tx", tx)  # Push data to table
-
+				
 				if args['display'] > 0:  # Only display frames if true
 					# Display drawings on frame
 					cv2.rectangle(display,(x,y),(x+w,y+h),(0,255,0),2)
