@@ -1,0 +1,5 @@
+1) Open Dash (The First Icon In Sidebar).
+2) Then type Startup Applications and open that app.
+3) Here Click the Add Button on the right.
+4) There fill in the details and in the command area add the vision.sh file.
+5) Done!
