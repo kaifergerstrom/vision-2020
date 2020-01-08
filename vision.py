@@ -57,9 +57,7 @@ def main():
 		cnts,_ = cv2.findContours(mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)  # Find the contours
 
 		if cnts:  # Prevent error if no contours found
-
 			cnt = max(cnts, key = cv2.contourArea)  # Find the biggest contour
-
 			if cv2.contourArea(cnt) > args['area']:  # Only pass contour if greater than the area limit
 				x,y,w,h = cv2.boundingRect(cnt)  # Get the bounding box of the biggest contour
 				tx = (x+w/2)-(width/2)  # tx is horizontal offset
@@ -70,7 +68,6 @@ def main():
 					cv2.rectangle(display,(x,y),(x+w,y+h),(0,255,0),2)
 					cv2.circle(display, (int(x+w/2), y), 5, (255,0,0), thickness=1)
 					cv2.line(display, (int(width/2), 0), (int(width/2), height), (0,0,255), 4)
-
 			else:
 				sd.putNumber("tx", OUTLIER)  # Push outlier value to table (not found)
 		else:
