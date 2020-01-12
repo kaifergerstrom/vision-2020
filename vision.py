@@ -27,6 +27,7 @@ def create_arguments():
 	ap.add_argument("-d", "--display", type=int, default=-1, help="Whether or not frames should be displayed")
 	ap.add_argument("-t", "--table", type=str, required=True, help="Determine the name of the NetworkTable to push to")
 	ap.add_argument("-a", "--area", type=int, default=0, help="Area limit for contour detection")
+	ap.add_argument("-f", "--fov", type=int, default=60, help="Degree FOV of camera")
 	args = vars(ap.parse_args())
 	return args
 
@@ -60,7 +61,9 @@ def main():
 			cnt = max(cnts, key = cv2.contourArea)  # Find the biggest contour
 			if cv2.contourArea(cnt) > args['area']:  # Only pass contour if greater than the area limit
 				x,y,w,h = cv2.boundingRect(cnt)  # Get the bounding box of the biggest contour
-				tx = (x+w/2)-(width/2)  # tx is horizontal offset
+				pixel_offset = (x+w/2)-(width/2)  # tx is horizontal offset
+				tx = pixel_offset * (args['fov'] / (width / 2))  # Convert pixel offset to angular offset
+
 				sd.putNumber("tx", tx)  # Push data to table
 				
 				if args['display'] > 0:  # Only display frames if true
