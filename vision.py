@@ -63,6 +63,7 @@ def main():
 				x,y,w,h = cv2.boundingRect(cnt)  # Get the bounding box of the biggest contour
 				pixel_offset = (x+w/2)-(width/2)  # tx is horizontal offset
 				tx = pixel_offset * (args['fov'] / (width / 2))  # Convert pixel offset to angular offset
+				print(tx)
 
 				sd.putNumber("tx", tx)  # Push data to table
 				
