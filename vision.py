@@ -63,9 +63,10 @@ def main():
 				x,y,w,h = cv2.boundingRect(cnt)  # Get the bounding box of the biggest contour
 				pixel_offset = (x+w/2)-(width/2)  # tx is horizontal offset
 				tx = pixel_offset * (args['fov'] / (width / 2))  # Convert pixel offset to angular offset
-				print(tx)
+				area = w * h
 
 				sd.putNumber("tx", tx)  # Push data to table
+				sd.putNumber("area", area)  # Push data to table
 				
 				if args['display'] > 0:  # Only display frames if true
 					# Display drawings on frame
